@@ -51,7 +51,7 @@ get_summary <- function(folder, meta, outfolder, query, name, celltypes, methods
     print(head(data_set))
                                   
     print("Get measures id...")                         
-    data_id <- get_measures_id(data) 
+    data_id <- get_accuracy_umap(data) 
     print("Write files...")
     if(!is.null(maxsize)) name <- paste0(name, maxsize) 
                                   
@@ -62,51 +62,6 @@ get_summary <- function(folder, meta, outfolder, query, name, celltypes, methods
 }
 
                                
-getName <- function(folder, position){
-  name <- unlist(stringr::str_split(folder,"/"))
-  name <- name[length(name)]
-  name <- unlist(stringr::str_split(name,"_"))[position]
-  return(name)
-}
 
-getVector <- function(method, folder){
-    if(method %in% c("Seurat", "SingleCellNet", "CellID", "SingleR")){
-  if(stringr::str_detect(folder, "predict")) stop("Wrong file")
-  name <- paste(sep="_", getName(folder,1), method ,getName(folder,2),
-                stringr::str_replace(getName(folder,3), ".txt", ""), getName(folder,4))
-  df <- read.csv(folder, sep="\t")
-  df <- df[,c("id", "predicted")] #.match
-  colnames(df) <- c("id", name)
-    
-} else if (method == "ItClust"){
-  name <- paste(sep="_",  getName(folder,1), "ItClust",getName(folder,2),
-                getName(folder,3), 0)
-  df <- read.csv(paste(folder, "results.txt", sep="/"), sep="\t")
-  df <- df[,c("class_", "predicted_celltype", "cell_id")]
-  colnames(df) <- c("class", "predicted", "id")
-  df[,name] <- df$predicted 
-  df <- df[, c("id",  name)]
-}
-    rownames(df) <- df$id
-    return(df)
-}
-
-get_results_method <- function(resultfolder, id, method){
-    print(paste("Start", method, "..."))
-    files <- list.files(resultfolder, pattern=id, full.names = T)
-    if (method == "Seurat") files <- files[stringr::str_detect(files,
-                                                               "predict", negate=T)]
-    
-    data <- lapply(files, function(file) getVector(method, file))
-    summary <- data %>% reduce(full_join, by = "id")
-    return(summary)
-}
-                   
-make_long <- function(data, celltypes, methods, sizes, ids =c("id", "class_")){
-    long <- reshape2::melt(data, id.vars = ids, value.name = "predicted")
-    long <- long %>% tidyr::separate(variable, c('Reference', 'Approach', "Size", "Set", "Genes"))
-
-    return(long)
-}
                    
    

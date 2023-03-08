@@ -51,7 +51,7 @@ get_summary <- function(folder, meta, outfolder, query, name, celltypes, methods
     print(head(data_set))
                                   
     print("Get measures id...")                         
-    data_id <- get_measures_id(data) 
+    data_id <- get_accuracy_umap(data) 
     print("Write files...")
     if(!is.null(maxsize)) name <- paste0(name, maxsize) 
                                   
